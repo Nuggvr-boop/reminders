@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Desktop Reminders</title>
+  <title>Reminders</title>
   <style>
     :root{
       --bg:#0b0e14;
@@ -124,10 +124,9 @@
   <div class="wrap">
     <header>
       <div class="title">
-        <h1>Desktop Reminders</h1>
+        <h1>Reminders</h1>
         <p>
-          This uses real Windows notifications (bottom-right). Keep this page open (even in the background) so the timer can run.
-          If you close Edge completely, reminders won’t fire.
+          Desktop notifications only (bottom-right). Keep this page open (background tab is fine) so reminders can trigger.
         </p>
       </div>
       <div class="pill" id="permPill">
@@ -200,7 +199,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const STORAGE_KEY = "desktop_reminders_v1";
+    const STORAGE_KEY = "desktop_reminders_v2";
     let reminders = load();
     let timer = null;
 
@@ -272,8 +271,8 @@
         help.textContent = "Edge is blocking notifications for this site.";
         showWarn(
           "Notifications are BLOCKED for this site.\n" +
-          "Fix: Click the lock icon in the address bar → Site permissions → Notifications → Allow.\n" +
-          "Then refresh this page."
+          "Fix: Lock icon → Site permissions → Notifications → Allow.\n" +
+          "Then refresh."
         );
       } else {
         dot.className = "dot mid";
@@ -285,7 +284,7 @@
       }
     }
 
-    // ✅ System notification ONLY (no website popups)
+    // ✅ Desktop notification ONLY
     function sendSystemNotification(title, message){
       if (!canNotify()) return false;
       if (Notification.permission !== "granted") return false;
@@ -293,8 +292,8 @@
       try{
         new Notification(title || "Reminder", {
           body: message || "",
-          // optional icon (you can replace/remove)
-          icon: "https://www.gstatic.com/images/branding/product/2x/chrome_48dp.png"
+          // Optional icon. Replace with your own or delete this line.
+          icon: "https://www.google.com/favicon.ico"
         });
         return true;
       }catch(e){
@@ -331,18 +330,15 @@
         if (!r || typeof r.time !== "number") continue;
 
         if (r.time <= now){
-          // Fire (system notification only)
           const ok = sendSystemNotification(r.title, r.message);
 
-          // If it didn't pop, warn the user (permission / system settings)
           if (!ok){
             showWarn(
-              "A reminder tried to fire but NO system notification appeared.\n" +
+              "A reminder fired but no system notification appeared.\n" +
               "Check: (1) Site notifications allowed in Edge, (2) Windows notifications ON, (3) Focus Assist OFF."
             );
           }
 
-          // Reschedule/remove
           if (r.repeat && r.repeat !== "none"){
             r.time = addInterval(r.time, r.repeat);
           } else {
@@ -424,13 +420,10 @@
       }
     }
 
-    // Buttons
     $("btnEnable").addEventListener("click", async () => {
       if (!canNotify()) return;
-
       try{
-        const res = await Notification.requestPermission();
-        console.log("Permission:", res);
+        await Notification.requestPermission();
       }catch(e){
         console.warn(e);
       }
@@ -482,7 +475,6 @@
       scheduler();
     });
 
-    // Init default datetime = 10 minutes from now
     (function init(){
       const d = new Date(Date.now() + 10*60*1000);
       const pad = (n)=> String(n).padStart(2,"0");
@@ -493,7 +485,6 @@
       scheduler();
     })();
 
-    // Keep UI accurate if you change permissions while open
     document.addEventListener("visibilitychange", () => setPermUI());
   </script>
 </body>
