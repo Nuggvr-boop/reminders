@@ -1,0 +1,658 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reminders</title>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #121826;
+            --card2: #0f1420;
+            --border: #26324a;
+            --text: #eef3ff;
+            --muted: #9fb0d0;
+            --accent: #6aa6ff;
+            --danger: #ff5b5b;
+            --ok: #36d399;
+            --shadow: 0 12px 35px rgba(0,0,0,.45);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: radial-gradient(1200px 700px at 20% 0%, rgba(106,166,255,.10), transparent 55%), radial-gradient(900px 600px at 90% 10%, rgba(54,211,153,.08), transparent 55%), var(--bg);
+            color: var(--text);
+        }
+
+        .wrap {
+            max-width: 1050px;
+            margin: 0 auto;
+            padding: 18px 16px 28px
+        }
+
+        header {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .title h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 850;
+            letter-spacing: .2px
+        }
+
+        .title p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            max-width: 720px
+        }
+
+        .grid {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 1fr;
+        }
+
+        @media(min-width: 900px) {
+            .grid {
+                grid-template-columns: 410px 1fr;
+            }
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255,255,255,.03), transparent 40%), var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .spaced {
+            justify-content: space-between
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 12px;
+            background: rgba(0,0,0,.12);
+            white-space: nowrap;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%
+        }
+
+            .dot.ok {
+                background: var(--ok)
+            }
+
+            .dot.bad {
+                background: var(--danger)
+            }
+
+            .dot.mid {
+                background: #ffd166
+            }
+
+        label {
+            display: block;
+            margin: 10px 0 6px;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--card2);
+            color: var(--text);
+            outline: none;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 92px;
+            resize: vertical
+        }
+
+        .btn {
+            border: none;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 800;
+            cursor: pointer;
+            background: var(--accent);
+            color: #06101f;
+        }
+
+            .btn.secondary {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--text);
+                font-weight: 750;
+            }
+
+            .btn.danger {
+                background: var(--danger);
+                color: #1a0606;
+            }
+
+            .btn:disabled {
+                opacity: .6;
+                cursor: not-allowed
+            }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px;
+            line-height: 1.35
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        .item {
+            background: rgba(0,0,0,.14);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+        }
+
+            .item h3 {
+                margin: 0 0 4px;
+                font-size: 15px
+            }
+
+        .meta {
+            margin: 0 0 8px;
+            color: var(--muted);
+            font-size: 12px
+        }
+
+        .msg {
+            margin: 0;
+            color: #dbe6ff;
+            font-size: 13px;
+            white-space: pre-wrap
+        }
+
+        .acts {
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .tiny {
+            padding: 8px 10px;
+            border-radius: 12px;
+            font-size: 12px
+        }
+
+        /* Popup (in-page) */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 50;
+        }
+
+        .modal {
+            width: min(520px, 100%);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 14px;
+        }
+
+        .modalTop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px
+        }
+
+            .modalTop strong {
+                font-size: 16px
+            }
+
+        .modalBody {
+            margin-top: 10px;
+            color: #dbe6ff;
+            white-space: pre-wrap
+        }
+
+        .modalFoot {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 14px;
+            flex-wrap: wrap
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <header>
+            <div class="title">
+                <h1>Reminders</h1>
+                <p>Create reminders that pop up on your screen. If system notifications are blocked, you’ll still get an in-page popup.</p>
+            </div>
+            <div class="pill" id="permPill">
+                <span class="dot mid" id="permDot"></span>
+                <span id="permText">Checking notifications…</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Create -->
+            <section class="card">
+                <div class="row spaced">
+                    <div class="pill">
+                        <span style="font-weight:800;color:var(--text)">Status</span>
+                        <span id="statusHint" style="color:var(--muted)">—</span>
+                    </div>
+                    <div class="row">
+                        <button class="btn secondary" id="btnEnable" type="button">Enable</button>
+                        <button class="btn" id="btnTest" type="button">Test</button>
+                    </div>
+                </div>
+
+                <label for="title">Title</label>
+                <input id="title" placeholder="e.g. Drink water" maxlength="60" />
+
+                <label for="message">Message</label>
+                <textarea id="message" placeholder="e.g. Quick stretch + water."></textarea>
+
+                <div class="row">
+                    <div style="flex:1; min-width:170px">
+                        <label for="when">Time</label>
+                        <input id="when" type="datetime-local" />
+                    </div>
+                    <div style="flex:1; min-width:150px">
+                        <label for="repeat">Repeat</label>
+                        <select id="repeat">
+                            <option value="none" selected>None</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:12px">
+                    <button class="btn" id="btnAdd" type="button">Add reminder</button>
+                    <button class="btn danger" id="btnClearAll" type="button">Clear all</button>
+                </div>
+
+                <div class="small" id="helpBox"></div>
+            </section>
+
+            <!-- List -->
+            <section class="card">
+                <div class="row spaced">
+                    <div>
+                        <div style="font-weight:900">Your reminders</div>
+                        <div class="small" style="margin-top:6px">Saved in your browser (localStorage).</div>
+                    </div>
+                    <div class="pill"><span id="count">0</span></div>
+                </div>
+
+                <div class="list" id="list"></div>
+                <div class="small" id="empty" style="display:none;margin-top:10px">No reminders yet.</div>
+            </section>
+        </div>
+    </div>
+
+    <!-- In-page popup -->
+    <div class="overlay" id="overlay">
+        <div class="modal">
+            <div class="modalTop">
+                <strong id="popTitle">Reminder</strong>
+                <span class="pill" id="popTime">Now</span>
+            </div>
+            <div class="modalBody" id="popBody"></div>
+            <div class="modalFoot">
+                <button class="btn secondary" id="btnSnooze" type="button">Snooze 5 min</button>
+                <button class="btn" id="btnDismiss" type="button">Dismiss</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        const STORAGE_KEY = "reminders_v2";
+        let reminders = load();
+        let timer = null;
+        let lastPoppedId = null;
+
+        function uid() {
+            return Math.random().toString(16).slice(2) + Date.now().toString(16);
+        }
+
+        function load() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                const arr = raw ? JSON.parse(raw) : [];
+                return Array.isArray(arr) ? arr : [];
+            } catch { return []; }
+        }
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
+        }
+
+        function format(ts) {
+            try { return new Date(ts).toLocaleString(); } catch { return String(ts); }
+        }
+
+        function canNotify() {
+            return "Notification" in window;
+        }
+
+        function setPermUI() {
+            const dot = $("permDot");
+            const txt = $("permText");
+            const hint = $("statusHint");
+            const help = $("helpBox");
+            const enableBtn = $("btnEnable");
+
+            help.textContent = "";
+
+            if (!canNotify()) {
+                dot.className = "dot bad";
+                txt.textContent = "Notifications not supported in this browser";
+                hint.textContent = "In-page popups only";
+                enableBtn.disabled = true;
+                help.textContent = "Your browser doesn’t support the Notification API. You’ll still get in-page popups.";
+                return;
+            }
+
+            const p = Notification.permission; // granted | denied | default
+            if (p === "granted") {
+                dot.className = "dot ok";
+                txt.textContent = "Notifications allowed";
+                hint.textContent = "System + in-page popups";
+                enableBtn.disabled = true;
+                help.textContent = "All good. Reminders will show as system notifications and an in-page popup.";
+            } else if (p === "denied") {
+                dot.className = "dot bad";
+                txt.textContent = "Notifications blocked";
+                hint.textContent = "In-page popups only";
+                enableBtn.disabled = true;
+                help.textContent =
+                    "Your browser is blocking notifications for this site.\n" +
+                    "Fix (Chrome/Edge): lock icon → Site settings → Notifications → Allow, then refresh.\n" +
+                    "Also: notifications usually require https:// or http://localhost (file:// often fails).";
+            } else {
+                dot.className = "dot mid";
+                txt.textContent = "Notifications not enabled";
+                hint.textContent = "In-page popups work now";
+                enableBtn.disabled = false;
+                help.textContent =
+                    "Click Enable to request permission.\n" +
+                    "If nothing happens, you’re probably on file:// — use http://localhost (Live Server) or host on https://.";
+            }
+        }
+
+        function systemNotify(title, body) {
+            if (!canNotify()) return false;
+            if (Notification.permission !== "granted") return false;
+            try {
+                new Notification(title || "Reminder", { body: body || "" });
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function showPopup(r) {
+            lastPoppedId = r.id;
+            $("popTitle").textContent = r.title || "Reminder";
+            $("popBody").textContent = r.message || "";
+            $("popTime").textContent = "Now";
+            $("overlay").style.display = "flex";
+        }
+        function hidePopup() {
+            $("overlay").style.display = "none";
+        }
+
+        function addInterval(ts, repeat) {
+            const d = new Date(ts);
+            if (repeat === "daily") d.setDate(d.getDate() + 1);
+            if (repeat === "weekly") d.setDate(d.getDate() + 7);
+            return d.getTime();
+        }
+
+        function nextDue() {
+            const now = Date.now();
+            let soon = null;
+            for (const r of reminders) {
+                if (typeof r.time !== "number") continue;
+                if (r.time >= now) soon = (soon === null || r.time < soon) ? r.time : soon;
+            }
+            return soon;
+        }
+
+        function scheduler() {
+            if (timer) clearTimeout(timer);
+
+            const now = Date.now();
+            let changed = false;
+
+            for (let i = 0; i < reminders.length; i++) {
+                const r = reminders[i];
+                if (!r || typeof r.time !== "number") continue;
+
+                if (r.time <= now) {
+                    // fire
+                    systemNotify(r.title, r.message); // may fail, popup still shows
+                    showPopup(r);
+
+                    if (r.repeat && r.repeat !== "none") {
+                        r.time = addInterval(r.time, r.repeat);
+                    } else {
+                        reminders.splice(i, 1);
+                        i--;
+                    }
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                save();
+                render();
+            }
+
+            const due = nextDue();
+            if (due === null) return;
+            timer = setTimeout(scheduler, Math.max(250, due - Date.now()));
+        }
+
+        function render() {
+            reminders.sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
+            $("count").textContent = String(reminders.length);
+
+            const list = $("list");
+            list.innerHTML = "";
+            $("empty").style.display = reminders.length ? "none" : "block";
+
+            for (const r of reminders) {
+                const el = document.createElement("div");
+                el.className = "item";
+
+                const left = document.createElement("div");
+                const right = document.createElement("div");
+                right.className = "acts";
+
+                const h = document.createElement("h3");
+                h.textContent = r.title || "Untitled";
+
+                const meta = document.createElement("p");
+                meta.className = "meta";
+                meta.textContent = `${format(r.time)}${(r.repeat && r.repeat !== "none") ? " • repeats: " + r.repeat : ""}`;
+
+                const msg = document.createElement("p");
+                msg.className = "msg";
+                msg.textContent = r.message || "";
+
+                left.appendChild(h);
+                left.appendChild(meta);
+                left.appendChild(msg);
+
+                const btnNow = document.createElement("button");
+                btnNow.className = "btn secondary tiny";
+                btnNow.type = "button";
+                btnNow.textContent = "Pop now";
+                btnNow.onclick = () => {
+                    systemNotify(r.title, r.message);
+                    showPopup(r);
+                };
+
+                const btnDel = document.createElement("button");
+                btnDel.className = "btn danger tiny";
+                btnDel.type = "button";
+                btnDel.textContent = "Delete";
+                btnDel.onclick = () => {
+                    reminders = reminders.filter(x => x.id !== r.id);
+                    save();
+                    render();
+                    scheduler();
+                };
+
+                right.appendChild(btnNow);
+                right.appendChild(btnDel);
+
+                el.appendChild(left);
+                el.appendChild(right);
+                list.appendChild(el);
+            }
+        }
+
+        // Buttons
+        $("btnEnable").addEventListener("click", async () => {
+            if (!canNotify()) return;
+
+            try {
+                // Must be triggered by a user click (this is)
+                const res = await Notification.requestPermission();
+                console.log("Permission:", res);
+            } catch (e) {
+                console.warn(e);
+            }
+            setPermUI();
+        });
+
+        $("btnTest").addEventListener("click", () => {
+            systemNotify("Test notification", "If you see this, system notifications work!");
+            showPopup({ id: "test", title: "Test popup", message: "This popup always works (even if notifications are blocked)." });
+        });
+
+        $("btnAdd").addEventListener("click", () => {
+            const title = $("title").value.trim();
+            const message = $("message").value.trim();
+            const when = $("when").value;
+            const repeat = $("repeat").value;
+
+            if (!when) {
+                alert("Pick a date/time first.");
+                return;
+            }
+
+            const ts = new Date(when).getTime();
+            if (!Number.isFinite(ts)) {
+                alert("That date/time looks invalid.");
+                return;
+            }
+
+            reminders.push({
+                id: uid(),
+                title,
+                message,
+                time: ts < Date.now() ? Date.now() + 3000 : ts,
+                repeat: repeat || "none"
+            });
+
+            save();
+            render();
+            scheduler();
+        });
+
+        $("btnClearAll").addEventListener("click", () => {
+            if (!confirm("Clear all reminders?")) return;
+            reminders = [];
+            save();
+            render();
+            scheduler();
+        });
+
+        $("btnDismiss").addEventListener("click", () => hidePopup());
+
+        $("btnSnooze").addEventListener("click", () => {
+            hidePopup();
+            // Snooze by creating a new reminder 5 mins from now
+            const ts = Date.now() + 5 * 60 * 1000;
+            reminders.push({
+                id: uid(),
+                title: "Snoozed: " + ($("popTitle").textContent || "Reminder"),
+                message: $("popBody").textContent || "",
+                time: ts,
+                repeat: "none"
+            });
+            save();
+            render();
+            scheduler();
+        });
+
+        // Init default datetime = 10 minutes from now
+        (function init() {
+            const d = new Date(Date.now() + 10 * 60 * 1000);
+            const pad = (n) => String(n).padStart(2, "0");
+            $("when").value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+            setPermUI();
+            render();
+            scheduler();
+        })();
+    </script>
+</body>
+</html>
